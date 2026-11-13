@@ -25,6 +25,7 @@ const original = document.createElement('canvas'),
   processed = document.createElement('canvas');
 function status(text) {
   $('status').textContent = text;
+  $('workspace-status').textContent = text;
 }
 function invalidate() {
   revision++;
@@ -37,7 +38,7 @@ function invalidate() {
   $('pixel').textContent = 'Process an image to inspect its stages.';
   $('histogram').getContext('2d').clearRect(0, 0, 512, 120);
   draw();
-  status('Settings changed. Develop again to update the preview.');
+  status('Settings changed. Process again to update the preview.');
 }
 function syncSource() {
   original.width = source.width;
@@ -94,7 +95,7 @@ function draw() {
   }
   $('description').textContent = result
     ? stages[stage][1]
-    : 'Original image · develop to see the selected processing stage.';
+    : 'Original image · process to see the selected processing stage.';
   for (const key of Object.keys(stages))
     $(`stage-${key}`).setAttribute('aria-pressed', String(stage === key));
 }
@@ -142,7 +143,7 @@ function run() {
   worker = current;
   $('run').disabled = true;
   $('png').disabled = $('report').disabled = true;
-  status('Developing the image…');
+  status('Processing the image…');
   const settings = {
     sigma: Number($('sigma').value),
     low: Number($('low').value),
@@ -176,7 +177,7 @@ function run() {
     current.terminate();
     worker = null;
     $('run').disabled = false;
-    status('Processing failed. Try developing again.');
+    status('Processing failed. Try processing again.');
   };
   current.postMessage({ ...source, ...settings });
 }
@@ -281,5 +282,7 @@ $('file').addEventListener('change', async () => {
     $('file').value = '';
   }
 });
+$('settings-open').addEventListener('click', () => $('settings').showModal());
+$('settings-close').addEventListener('click', () => $('settings').close());
 syncSource();
 run();

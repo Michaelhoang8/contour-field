@@ -4,6 +4,8 @@ A local computer-vision workbench that makes a Canny-style edge pipeline inspect
 
 ![Image workbench](docs/workbench.png)
 
+The image fills the main workspace. Select a processing stage below it, use the original/processed comparison slider, and open Processing settings for source fixtures, thresholds, measurements, and exports. Pixel inspection and the gradient histogram expand below the image.
+
 ## Run
 
 Python 3.10+, no packages or build step:
