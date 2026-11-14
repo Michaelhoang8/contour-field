@@ -20,7 +20,8 @@ let source = fixture(),
   stage = 'overlay',
   worker = null,
   revision = 0,
-  elapsed = 0;
+  elapsed = 0,
+  previewCache = null;
 const original = document.createElement('canvas'),
   processed = document.createElement('canvas');
 function status(text) {
@@ -73,15 +74,18 @@ function draw() {
   const fraction = Number($('wipe').value) / 100;
   $('wipe-value').textContent = `${Math.round(fraction * 100)}% original`;
   if (result) {
-    processed.width = source.width;
-    processed.height = source.height;
-    processed
-      .getContext('2d')
-      .putImageData(
-        new ImageData(displayRGBA(result, stage, source.rgba), source.width, source.height),
-        0,
-        0,
-      );
+    if (!previewCache || previewCache.result !== result || previewCache.stage !== stage) {
+      processed.width = source.width;
+      processed.height = source.height;
+      processed
+        .getContext('2d')
+        .putImageData(
+          new ImageData(displayRGBA(result, stage, source.rgba), source.width, source.height),
+          0,
+          0,
+        );
+      previewCache = { result, stage };
+    }
     ctx.save();
     ctx.beginPath();
     ctx.rect(source.width * fraction, 0, source.width * (1 - fraction), source.height);
@@ -90,7 +94,21 @@ function draw() {
     ctx.restore();
     if (fraction > 0 && fraction < 1) {
       ctx.fillStyle = '#ee6d3e';
-      ctx.fillRect(Math.floor(source.width * fraction), 0, 1, source.height);
+      const split = source.width * fraction;
+      ctx.fillRect(Math.floor(split), 0, 1, source.height);
+      ctx.beginPath();
+      ctx.arc(split, source.height / 2, 10, 0, Math.PI * 2);
+      ctx.fillStyle = '#242422';
+      ctx.fill();
+      ctx.strokeStyle = '#ee906d';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(split - 3, source.height / 2 - 4);
+      ctx.lineTo(split - 3, source.height / 2 + 4);
+      ctx.moveTo(split + 3, source.height / 2 - 4);
+      ctx.lineTo(split + 3, source.height / 2 + 4);
+      ctx.stroke();
     }
   }
   $('description').textContent = result
@@ -286,3 +304,40 @@ $('settings-open').addEventListener('click', () => $('settings').showModal());
 $('settings-close').addEventListener('click', () => $('settings').close());
 syncSource();
 run();
+
+let draggingComparison = false;
+function moveComparison(event) {
+  if (!result) return;
+  const rect = $('view').getBoundingClientRect(),
+    fit = Math.min(rect.width / source.width, rect.height / source.height),
+    width = source.width * fit,
+    left = rect.left + (rect.width - width) / 2;
+  $('wipe').value = Math.round(Math.max(0, Math.min(100, ((event.clientX - left) / width) * 100)));
+  draw();
+}
+$('view').addEventListener('pointerdown', (event) => {
+  if (!result || event.button !== 0) return;
+  draggingComparison = true;
+  $('view').setPointerCapture(event.pointerId);
+  moveComparison(event);
+});
+$('view').addEventListener('pointermove', (event) => {
+  if (draggingComparison) moveComparison(event);
+});
+for (const type of ['pointerup', 'pointercancel', 'lostpointercapture'])
+  $('view').addEventListener(type, () => {
+    draggingComparison = false;
+  });
+$('view').addEventListener('keydown', (event) => {
+  if (!result) return;
+  const key = event.key;
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) return;
+  event.preventDefault();
+  $('wipe').value =
+    key === 'Home'
+      ? 0
+      : key === 'End'
+        ? 100
+        : Math.max(0, Math.min(100, Number($('wipe').value) + (key === 'ArrowLeft' ? -1 : 1)));
+  draw();
+});

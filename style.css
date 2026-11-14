@@ -339,3 +339,14 @@ dd {
     }
   }
 }
+#view {
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+#view:focus-visible {
+  outline: 2px solid #ee906d;
+  outline-offset: 4px;
+}
+.canvas-wrap {
+  background: radial-gradient(ellipse at center, #343732, #171817 75%);
+}

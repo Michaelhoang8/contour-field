@@ -6,6 +6,8 @@ A local computer-vision workbench that makes a Canny-style edge pipeline inspect
 
 The image fills the main workspace. Select a processing stage below it, use the original/processed comparison slider, and open Processing settings for source fixtures, thresholds, measurements, and exports. Pixel inspection and the gradient histogram expand below the image.
 
+Drag directly across the image to move the comparison divider, or focus the image and use Left/Right for one-percent steps, Home for processed, and End for original. A small handle marks the divider. Processed stage pixels are cached while moving it; PNG exports still contain the full selected stage without the divider.
+
 ## Run
 
 Python 3.10+, no packages or build step:
